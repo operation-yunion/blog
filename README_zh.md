@@ -36,12 +36,10 @@ See the [Release Notes]()
 
 ## Contribution
 
-Any contribution are welcome! Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
 Thank you to all the people who already contributed to operation-yunion/blog!
 
 [![contributors](https://badges.implements.io/api/contributors?org=operation-yunion&repo=blog&width=1280&size=48&padding=6&type=svg)](https://github.com/alc-beijing/translation/graphs/contributors)
 
 ## License
 
-[Apache License 2.0](https://opensource.org/licenses/Apache-2.0).
+[Apache 2.0](https://opensource.org/licenses/Apache-2.0)

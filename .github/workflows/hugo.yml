@@ -1,0 +1,82 @@
+# operation-yunion/blog
+
+name: Hugo
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    strategy:
+      matrix:
+        version: [0.79.0]
+        image: [ext-alpine]
+
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout 
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      # https://github.com/klakegg/actions-hugo
+      - name: Test - create new blog (this is used to test)
+        uses: klakegg/actions-hugo@1.0.0
+        with:
+          version: ${{ matrix.version }}
+          image: ${{ matrix.image }}
+          command: new site blog
+          env: production
+
+      - name: Build blog with hugo
+        uses: klakegg/actions-hugo@1.0.0
+        with:
+          version: ${{ matrix.version }}
+          image: ${{ matrix.image }}
+          source: /blog/
+          target: public/
+          command: --debug
+          pandoc_command: pandoc-default
+          env: production
+
+      # https://learn.hashicorp.com/tutorials/terraform/install-cli
+      - name: Install terraform 
+        run: |
+          sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
+
+      # https://help.aliyun.com/document_detail/121541.html
+      - name: Install aliyun-cli
+        run: |
+          wget -P /tmp/ https://github.com/aliyun/aliyun-cli/releases/download/v3.0.74/aliyun-cli-linux-3.0.74-amd64.tgz
+          tar -C /usr/local/bin/ -xvf /tmp/aliyun-cli-linux-3.0.74-amd64.tgz
+          aliyun auto-completion
+
+      # https://github.com/aliyun/terraform-provider-alicloud/actions
+      - name: Upload to AliCloud OSS
+        env:
+          ALICLOUD_ACCESS_KEY: ${{ secrets.ALICLOUD_ACCESS_KEY }}
+          ALICLOUD_SECRET_KEY: ${{ secrets.ALICLOUD_SECRET_KEY }}
+          ALICLOUD_REGION: ${{ secrets.ALICLOUD_REGION }}
+        run: |
+          echo $ALICLOUD_ACCESS_KEY $ALICLOUD_SECRET_KEY $ALICLOUD_REGION
+          aliyun oss cp public/ oss://${{ secrets.ALICLOUD_OSS_BUCKET }}
+
+      # Release notification
+      - name: Release notification
+        run: |
+          echo Add other actions to build,
+          echo test, and deploy your project.
